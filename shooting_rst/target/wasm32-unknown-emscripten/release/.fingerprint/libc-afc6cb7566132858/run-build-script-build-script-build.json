@@ -1,1 +1,0 @@
-{"rustc":17807758859236181817,"features":"","target":0,"profile":0,"path":0,"deps":[[15292646402770964235,"build_script_build",false,2982416273838070804]],"local":[{"RerunIfChanged":{"output":"wasm32-unknown-emscripten/release/build/libc-afc6cb7566132858/output","paths":["build.rs"]}}],"rustflags":[],"metadata":0,"config":0,"compile_kind":0}
