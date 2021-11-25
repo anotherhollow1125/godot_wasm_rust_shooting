@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/attack1.mp3-2fcd212e2ff418e4b7329443c019858b.mp3str"
+
+[deps]
+
+source_file="res://gdt_assets/attack1.mp3"
+dest_files=[ "res://.import/attack1.mp3-2fcd212e2ff418e4b7329443c019858b.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0

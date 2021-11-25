@@ -1,0 +1,1 @@
+{"rustc":4721438020156434217,"features":"","target":0,"profile":0,"path":0,"deps":[[17060495305655490836,"build_script_build",false,8448949834659526837]],"local":[{"RerunIfChanged":{"output":"wasm32-unknown-emscripten\\release\\build\\gdnative-bindings-b69c85e561996e00\\output","paths":["docs/","api.json","build.rs"]}}],"rustflags":[],"metadata":0,"config":0,"compile_kind":0}

@@ -1,0 +1,17 @@
+[env]
+# Please specify EMMAKEN_CFLAGS by yourself. export EMMAKEN_CFLAGS="..."
+# EMMAKEN_CFLAGS = "-s SIDE_MODULE=1 -shared -Wl,--no-check-features -all"
+# C_INCLUDE_PATH = "$EMSDK/upstream/emscripten/cache/sysroot/include/"
+# export EMMAKEN_CFLAGS="-s SIDE_MODULE=1 -shared -Wl,--no-check-features -all"
+# export C_INCLUDE_PATH="$EMSDK/upstream/emscripten/cache/sysroot/include/"
+
+[profile.release]
+opt-level = "s"
+overflow-checks = false
+debug-assertions = false
+lto = true
+panic = "abort"
+
+[target.wasm32-unknown-emscripten]
+linker = "./emcc-test"
+rustflags = "-C link-args=-fPIC -C relocation-model=pic"

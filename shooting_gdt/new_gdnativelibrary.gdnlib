@@ -1,0 +1,16 @@
+[general]
+
+singleton=false
+load_once=true
+symbol_prefix="godot_"
+reloadable=true
+
+[entry]
+
+HTML5.wasm32="res://shooting_rst.wasm"
+Windows.64="res://shooting_rst.dll"
+
+[dependencies]
+
+HTML5.wasm32=[  ]
+Windows.64=[  ]
