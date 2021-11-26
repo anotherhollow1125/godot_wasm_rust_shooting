@@ -188,10 +188,6 @@ impl Player {
     fn shoot(&self, owner: &KinematicBody) {
         let t = (self.env.time * 100.0) as u64;
 
-        if t % 5 != 0 {
-            return;
-        }
-
         let barrel = unsafe {
             if t % 2 == 0 {
                 self.left_barrel.as_ref().unwrap().assume_safe()
