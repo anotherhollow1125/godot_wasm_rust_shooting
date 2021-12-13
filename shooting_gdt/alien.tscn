@@ -1,16 +1,21 @@
 [gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://alien1.tscn" type="PackedScene" id=1]
+[ext_resource path="res://gdt_assets/alien1.glb" type="PackedScene" id=1]
 [ext_resource path="res://alien.gdns" type="Script" id=2]
 
 [sub_resource type="BoxShape" id=1]
-extents = Vector3( 1, 0.631145, 1 )
+extents = Vector3( 0.752819, 0.605536, 0.883696 )
 
-[node name="alien" type="KinematicBody"]
+[node name="alien" type="Area"]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0 )
+collision_layer = 2
+collision_mask = 4
 script = ExtResource( 2 )
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.595284, 0 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.636573, 0 )
 shape = SubResource( 1 )
 
 [node name="alien1" parent="." instance=ExtResource( 1 )]
+
+[connection signal="area_entered" from="." to="." method="shooted"]

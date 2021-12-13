@@ -7,8 +7,8 @@
 [ext_resource path="res://tail_fire.gdshader" type="Shader" id=5]
 [ext_resource path="res://gdt_assets/laser2.mp3" type="AudioStream" id=6]
 
-[sub_resource type="BoxShape" id=1]
-extents = Vector3( 1, 0.297597, 0.783467 )
+[sub_resource type="BoxShape" id=5]
+extents = Vector3( 1, 0.326491, 0.837481 )
 
 [sub_resource type="CapsuleMesh" id=2]
 
@@ -19,13 +19,14 @@ shader_param/fire_color = Color( 0, 0, 1, 1 )
 [sub_resource type="BoxShape" id=4]
 extents = Vector3( 10, 10, 1 )
 
-[node name="PlayerRoot" type="KinematicBody"]
+[node name="PlayerRoot" type="Area"]
+collision_mask = 2
 script = ExtResource( 2 )
 bullet = ExtResource( 4 )
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.304942, 0.212882 )
-shape = SubResource( 1 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.317365, 0.157369 )
+shape = SubResource( 5 )
 
 [node name="fighter" parent="." instance=ExtResource( 1 )]
 
@@ -40,9 +41,10 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0, -0.8 )
 [node name="RightBarrel" type="Spatial" parent="fighter"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0, -0.8 )
 
-[node name="BulletWall" type="KinematicBody" parent="."]
+[node name="BulletWall" type="Area" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15 )
-collision_layer = 4
+collision_layer = 0
+collision_mask = 4
 
 [node name="CollisionShape" type="CollisionShape" parent="BulletWall"]
 shape = SubResource( 4 )

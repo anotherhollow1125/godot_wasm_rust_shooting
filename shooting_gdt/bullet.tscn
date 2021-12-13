@@ -16,7 +16,9 @@ emission_energy = 1.0
 emission_operator = 0
 emission_on_uv2 = false
 
-[node name="bullet" type="KinematicBody"]
+[node name="bullet" type="Area"]
+collision_layer = 4
+collision_mask = 2
 script = ExtResource( 1 )
 speed = 15.0
 
@@ -28,3 +30,5 @@ transform = Transform( 0.08, 0, 0, 0, 0.08, 0, 0, 0, 0.12, 0, 0, 0 )
 mesh = SubResource( 2 )
 skeleton = NodePath("")
 material/0 = SubResource( 3 )
+
+[connection signal="area_entered" from="." to="." method="hit"]
