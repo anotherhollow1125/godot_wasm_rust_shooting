@@ -5,8 +5,8 @@ extends MeshInstance
 # var a = 2
 # var b = "text"
 
-var speed = 0.5;
-const original_speed = 0.5;
+var speed = 0.1;
+const original_speed = 0.1;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

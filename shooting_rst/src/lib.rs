@@ -4,6 +4,45 @@ use gdnative::prelude::*;
 use std::collections::VecDeque;
 use std::f32::consts::PI;
 
+pub fn rotate_xz_vec3(v: Vector3, theta: f32) -> Vector3 {
+    let c = theta.cos();
+    let s = theta.sin();
+    Vector3::new(v.x * c - v.z * s, v.y, v.x * s + v.z * c)
+}
+
+pub const BARRAGE_PLANS: [fn(Vector3) -> Vec<Vector3>; 7] = [
+    // simple barrage
+    |dir| -> Vec<Vector3> { vec![dir] },
+    // simple barrage
+    |dir| -> Vec<Vector3> { vec![dir] },
+    // simple barrage
+    |dir| -> Vec<Vector3> { vec![dir] },
+    // simple barrage
+    |dir| -> Vec<Vector3> { vec![dir] },
+    // three way barrage
+    |dir| -> Vec<Vector3> {
+        let mut v = vec![dir];
+        v.push(rotate_xz_vec3(dir, PI / 3.0));
+        v.push(rotate_xz_vec3(dir, -PI / 3.0));
+        v
+    },
+    // three way barrage
+    |dir| -> Vec<Vector3> {
+        let mut v = vec![dir];
+        v.push(rotate_xz_vec3(dir, PI / 3.0));
+        v.push(rotate_xz_vec3(dir, -PI / 3.0));
+        v
+    },
+    // all range barrage
+    |dir| -> Vec<Vector3> {
+        let mut v = vec![];
+        for i in 0..6 {
+            v.push(rotate_xz_vec3(dir, PI * i as f32 / 3.0));
+        }
+        v
+    },
+];
+
 struct Env {
     time: f32,
     theta: f32,
@@ -54,6 +93,60 @@ impl Env {
     }
 }
 
+struct AlienEnv {
+    left_limit: f32,
+    right_limit: f32,
+    up_limit: f32,
+    down_limit: f32,
+}
+
+impl AlienEnv {
+    pub fn new() -> Self {
+        AlienEnv {
+            left_limit: 0.0,
+            right_limit: 0.0,
+            up_limit: 0.0,
+            down_limit: 0.0,
+        }
+    }
+
+    pub fn init(&mut self, owner: &Node) {
+        let left_limit_node = unsafe {
+            owner
+                .get_node_as::<Spatial>("/root/stage/alien_left_limit")
+                .unwrap()
+        };
+        let right_limit_node = unsafe {
+            owner
+                .get_node_as::<Spatial>("/root/stage/alien_right_limit")
+                .unwrap()
+        };
+        let up_limit_node = unsafe {
+            owner
+                .get_node_as::<Spatial>("/root/stage/alien_up_limit")
+                .unwrap()
+        };
+        let down_limit_node = unsafe {
+            owner
+                .get_node_as::<Spatial>("/root/stage/alien_down_limit")
+                .unwrap()
+        };
+
+        self.left_limit = left_limit_node.translation().x;
+        self.right_limit = right_limit_node.translation().x;
+        self.up_limit = up_limit_node.translation().z;
+        self.down_limit = down_limit_node.translation().z;
+    }
+
+    pub fn gone_far_away(&self, owner: &Spatial) -> bool {
+        let pos = owner.translation();
+        pos.x < self.left_limit
+            || pos.x > self.right_limit
+            || pos.z < self.up_limit
+            || pos.z > self.down_limit
+    }
+}
+
 #[derive(NativeClass)]
 #[inherit(Node)]
 #[register_with(Self::register_signals)]
@@ -74,6 +167,12 @@ struct Stage {
     beated_alien_num: i32,
     #[property(default = 1.0)]
     stage_heat: f32,
+
+    #[property(default = 200)]
+    alibullet_num: i32,
+    #[property]
+    alibullet_scene: Ref<PackedScene>,
+    alibullets_magazine: Option<Magazine<AlienBullet>>,
 }
 
 #[gdnative::methods]
@@ -90,10 +189,16 @@ impl Stage {
             player_life: 3,
             beated_alien_num: 0,
             stage_heat: 1.0,
+
+            alibullet_num: 200,
+            alibullet_scene: PackedScene::new().into_shared(),
+            alibullets_magazine: None,
         }
     }
 
     fn register_signals(builder: &ClassBuilder<Self>) {
+        // godot_print!("register_signals@Stage");
+
         builder.add_signal(Signal {
             name: "restart_player",
             args: &[],
@@ -107,10 +212,13 @@ impl Stage {
                 usage: PropertyUsage::DEFAULT,
             }],
         });
+
+        // godot_print!("end register_signals@Stage");
     }
 
     #[export]
     fn _ready(&mut self, owner: &Node) {
+        // godot_print!("start _ready@Stage");
         let rng = RandomNumberGenerator::new();
         rng.randomize();
         let alien_spawn_timer = unsafe {
@@ -122,6 +230,11 @@ impl Stage {
         self.alien_spawn_timer = Some(alien_spawn_timer);
         self.aliens_magazine = Some(Magazine::new(&self.alien_scene, self.alien_num as usize));
         self.env.init(owner);
+
+        self.alibullets_magazine = Some(Magazine::new(
+            &self.alibullet_scene,
+            self.alibullet_num as usize,
+        ));
 
         let player = unsafe { owner.get_node_as::<Area>("/root/stage/PlayerRoot").unwrap() };
         owner
@@ -140,33 +253,67 @@ impl Stage {
     }
 
     #[allow(unused)]
-    fn get_magazine(&self) -> &Magazine<Alien> {
+    fn get_alien_magazine(&self) -> &Magazine<Alien> {
         self.aliens_magazine.as_ref().unwrap()
     }
 
-    fn mut_magazine(&mut self) -> &mut Magazine<Alien> {
+    fn mut_alien_magazine(&mut self) -> &mut Magazine<Alien> {
         self.aliens_magazine.as_mut().unwrap()
+    }
+
+    #[allow(unused)]
+    fn get_alibul_magazine(&self) -> &Magazine<AlienBullet> {
+        self.alibullets_magazine.as_ref().unwrap()
+    }
+
+    fn mut_alibul_magazine(&mut self) -> &mut Magazine<AlienBullet> {
+        self.alibullets_magazine.as_mut().unwrap()
     }
 
     #[export]
     fn spawn_alien(&mut self, owner: &Node) {
         // godot_print!("spawn_alien");
 
-        let (spawn_x, interval) = match self.rng {
-            Some(ref mut rng) => {
-                let interval = rng.randf_range(0.5, 3.0);
-                let spawn_x =
-                    rng.randf_range(self.env.left_limit as f64, self.env.right_limit as f64);
-                (spawn_x, interval)
-            }
-            None => return,
-        };
-        let aliens_scene = match self.mut_magazine().hammer() {
+        let (pos, process, dir, interval): (Vector3, fn(&mut Alien, &Area, f64), Vector3, f64) =
+            match self.rng {
+                Some(ref mut rng) => {
+                    let interval = rng.randf_range(0.5, 3.0) / self.stage_heat as f64;
+
+                    let (pos, process, dir) = if rng.randi_range(0, 1) == 0 {
+                        let spawn_x = rng
+                            .randf_range(self.env.left_limit as f64, self.env.right_limit as f64);
+                        (
+                            Vector3::new(spawn_x as f32, 0.0, -27.0),
+                            Alien::invasion_pattern as _,
+                            Vector3::new(0.0, 0.0, 1.0),
+                        )
+                    } else {
+                        let mid = ((self.env.up_limit + self.env.down_limit) / 2.0) as f64;
+                        let spawn_z = rng.randf_range(self.env.up_limit as f64, mid);
+                        let t = [-1.0, 1.0][rng.randi_range(0, 1) as usize];
+                        let x = t * 22.0;
+                        let dir = Vector3::new(t, 0.0, 0.0);
+                        (
+                            Vector3::new(x, 0.0, spawn_z as f32),
+                            Alien::dir_pattern as _,
+                            dir,
+                        )
+                    };
+
+                    (pos, process, dir, interval)
+                }
+                None => return,
+            };
+
+        let aliens_scene = match self.mut_alien_magazine().hammer() {
             Some(a) => {
                 a.map_mut(|t, owner| {
                     t.reset(&owner);
-                    t.speed_up(&owner, self.stage_heat);
-                    t.set_process(Alien::invasion_pattern);
+                    t.speed_up(self.stage_heat);
+                    t.set_dir_change_span_random(1.0 / self.stage_heat);
+                    t.set_fire_span_random(1.0 / self.stage_heat);
+                    t.set_dir(dir);
+                    t.set_process(process);
                 })
                 .ok();
                 a.into_base()
@@ -179,7 +326,7 @@ impl Stage {
 
         // godot_print!("spawn_alien beep");
 
-        let pos = Vector3::new(spawn_x as f32, 0.0, -27.0);
+        // let pos = Vector3::new(spawn_x as f32, 0.0, -27.0);
         // let pos = Vector3::new(spawn_x as f32, 0.0, -10.0);
 
         aliens_scene.set_translation(pos);
@@ -200,13 +347,25 @@ impl Stage {
         // godot_print!("stage collect alien");
         let alien_area: Ref<Area, Unique> =
             unsafe { alien_var.try_to_object().unwrap().assume_unique() };
-        self.mut_magazine().charge_bullet(alien_area);
+        self.mut_alien_magazine().charge_bullet(alien_area);
         /*
         godot_print!(
             "end stage collect alien: {}",
-            self.get_magazine().get_left_num()
+            self.get_alien_magazine().get_left_num()
         );
         */
+    }
+
+    #[export]
+    fn collect_alien_bullet(&mut self, _owner: &Node, alien_bullet_var: Variant) {
+        // godot_print!("stage collect alien bullet");
+        let alien_bullet_area: Ref<Area, Unique> =
+            unsafe { alien_bullet_var.try_to_object().unwrap().assume_unique() };
+        self.mut_alibul_magazine().charge_bullet(alien_bullet_area);
+        godot_print!(
+            "end stage collect alien bullet: {}",
+            self.get_alibul_magazine().get_left_num()
+        );
     }
 
     #[export]
@@ -233,7 +392,51 @@ impl Stage {
             owner.emit_signal("speed_up", &[Variant::from_f64(self.stage_heat as f64)]);
             godot_print!("Stage Heat: {}", self.stage_heat);
         }
-        // godot_print!("beated_alien_num: {}", self.beated_alien_num);
+        if self.beated_alien_num % 20 == 0 {
+            self.player_life += 1;
+            godot_print!("Player Life Extended: {}", self.player_life);
+        }
+        godot_print!("beated_alien_num: {}", self.beated_alien_num);
+    }
+
+    #[export]
+    fn alien_fire(
+        &mut self,
+        owner: &Node,
+        pos: Variant,
+        dir: Variant,
+        speed: Variant,
+        kind: Variant,
+    ) {
+        let pos: Vector3 = pos.to_vector3();
+        let dir: Vector3 = dir.to_vector3();
+        let speed: f64 = speed.to_f64();
+        let kind: i64 = kind.to_i64();
+
+        let dirs = BARRAGE_PLANS[(kind % BARRAGE_PLANS.len() as i64) as usize](dir);
+
+        // godot_print!("alien_fire: {:?} {:?} {:?} {:?}", pos, dir, speed, kind);
+
+        for dir in dirs {
+            let bullet_scene = match self.mut_alibul_magazine().hammer() {
+                Some(a) => {
+                    a.map_mut(|t, _owner| {
+                        t.set_speed(speed as f32);
+                        // godot_print!("dir: {:?}", dir);
+                        t.set_dir(dir);
+                        t.flying = true;
+                    })
+                    .ok();
+                    a.into_base()
+                }
+                None => {
+                    // godot_print!("No bullets left");
+                    return;
+                }
+            };
+            bullet_scene.set_translation(pos);
+            owner.add_child(bullet_scene, false);
+        }
     }
 }
 
@@ -352,14 +555,19 @@ impl Player {
     }
 
     fn register_signals(builder: &ClassBuilder<Self>) {
+        // godot_print!("register_signals@Player");
+
         builder.add_signal(Signal {
             name: "player_beated",
             args: &[],
         });
+
+        // godot_print!("end register_signals@Player");
     }
 
     #[export]
     fn _ready(&mut self, owner: &Area) {
+        // godot_print!("start _ready@Player");
         self.setted_speed = self.speed;
         self.magazine = Some(Magazine::new(&self.bullet_scene, self.bullet_num as usize));
 
@@ -453,7 +661,7 @@ impl Player {
 
     #[export]
     fn reset(&mut self, owner: &Area) {
-        godot_print!("reset@Player");
+        // godot_print!("reset@Player");
         self.alive = true;
         owner.set_translation(Vector3::new(0.0, 0.0, 0.0));
         self.speed = self.setted_speed;
@@ -722,6 +930,8 @@ impl Bullet {
     }
 
     fn register_signals(builder: &ClassBuilder<Self>) {
+        // godot_print!("register_signals@Bullet");
+
         builder.add_signal(Signal {
             name: "collect",
             args: &[SignalArgument {
@@ -731,6 +941,8 @@ impl Bullet {
                 usage: PropertyUsage::DEFAULT,
             }],
         });
+
+        // godot_print!("end register_signals@Bullet");
     }
 
     #[export]
@@ -750,6 +962,8 @@ impl Bullet {
                 0,
             )
             .unwrap();
+
+        // godot_print!("ready@Bullet");
     }
 
     #[export]
@@ -787,6 +1001,7 @@ struct Alien {
     alive: bool,
     #[property(default = 5.0)]
     speed: f32,
+    direction: Vector3,
     setted_speed: f32,
     env: Env,
     attack_sound: Option<Ref<AudioStreamPlayer, Unique>>,
@@ -794,11 +1009,18 @@ struct Alien {
     alien_spatial: Option<Ref<Spatial, Unique>>,
     frag: Option<Ref<CPUParticles, Unique>>,
     destruct_timer: Option<Ref<Timer, Unique>>,
-    alien_left_limit: f32,
-    alien_right_limit: f32,
-    alien_up_limit: f32,
-    alien_down_limit: f32,
+    alien_env: AlienEnv,
     process_pattern: fn(&mut Self, &Area, f64),
+    rng: Option<Ref<RandomNumberGenerator, Unique>>,
+    change_dir_timer: Option<Ref<Timer, Unique>>,
+
+    fire_timer: Option<Ref<Timer, Unique>>,
+    player_root: Option<Ref<Area, Shared>>,
+
+    #[property(default = 5.0)]
+    default_min_fire_interval: f32,
+    #[property(default = 10.0)]
+    default_max_fire_interval: f32,
 }
 
 #[gdnative::methods]
@@ -807,22 +1029,30 @@ impl Alien {
         Self {
             alive: false,
             speed: 5.0,
+            direction: Vector3::new(0.0, 0.0, 1.0),
             setted_speed: 5.0,
             env: Env::new(),
-            alien_left_limit: 0.0,
-            alien_right_limit: 0.0,
-            alien_up_limit: 0.0,
-            alien_down_limit: 0.0,
+            alien_env: AlienEnv::new(),
             attack_sound: None,
             collision_shape: None,
             alien_spatial: None,
             frag: None,
             destruct_timer: None,
             process_pattern: Self::default_process_pattern,
+            rng: None,
+            change_dir_timer: None,
+
+            fire_timer: None,
+            player_root: None,
+
+            default_min_fire_interval: 5.0,
+            default_max_fire_interval: 10.0,
         }
     }
 
     fn register_signals(builder: &ClassBuilder<Self>) {
+        // godot_print!("register_signals@Alien");
+
         builder.add_signal(Signal {
             name: "collect_alien",
             args: &[SignalArgument {
@@ -836,14 +1066,50 @@ impl Alien {
             name: "beated_alien",
             args: &[],
         });
+        builder.add_signal(Signal {
+            name: "alien_fire",
+            args: &[
+                SignalArgument {
+                    name: "pos",
+                    default: Variant::from_vector3(&Vector3::new(0.0, 0.0, 0.0)),
+                    export_info: ExportInfo::new(VariantType::Vector3),
+                    usage: PropertyUsage::DEFAULT,
+                },
+                SignalArgument {
+                    name: "dir",
+                    default: Variant::from_vector3(&Vector3::new(0.0, 0.0, 0.0)),
+                    export_info: ExportInfo::new(VariantType::Vector3),
+                    usage: PropertyUsage::DEFAULT,
+                },
+                SignalArgument {
+                    name: "speed",
+                    default: Variant::from_f64(0.0),
+                    export_info: ExportInfo::new(VariantType::F64),
+                    usage: PropertyUsage::DEFAULT,
+                },
+                SignalArgument {
+                    name: "bullet_type",
+                    default: Variant::from_i64(0),
+                    export_info: ExportInfo::new(VariantType::I64),
+                    usage: PropertyUsage::DEFAULT,
+                },
+            ],
+        });
+
+        // godot_print!("end register_signals@Alien");
     }
 
     #[export]
     fn _ready(&mut self, owner: &Area) {
+        // godot_print!("start _ready@Alien");
+        let rng = RandomNumberGenerator::new();
+        rng.randomize();
+        self.rng = Some(rng);
+
         self.alive = true;
         self.setted_speed = self.speed;
+        // self.direction = Vector3::new(0.0, 0.0, 1.0);
         self.env.init(owner);
-        // // godot_print!("_ready@Alien {}", env!("CARGO_PKG_VERSION"));
 
         let stage = unsafe { owner.get_node("/root/stage").unwrap().assume_safe() };
         owner
@@ -864,32 +1130,17 @@ impl Alien {
                 0,
             )
             .unwrap();
+        owner
+            .connect(
+                "alien_fire",
+                stage,
+                "alien_fire",
+                VariantArray::new_shared(),
+                0,
+            )
+            .unwrap();
 
-        let a_left_limit_node = unsafe {
-            owner
-                .get_node_as::<Spatial>("/root/stage/alien_left_limit")
-                .unwrap()
-        };
-        let a_right_limit_node = unsafe {
-            owner
-                .get_node_as::<Spatial>("/root/stage/alien_right_limit")
-                .unwrap()
-        };
-        let a_up_limit_node = unsafe {
-            owner
-                .get_node_as::<Spatial>("/root/stage/alien_up_limit")
-                .unwrap()
-        };
-        let a_down_limit_node = unsafe {
-            owner
-                .get_node_as::<Spatial>("/root/stage/alien_down_limit")
-                .unwrap()
-        };
-
-        self.alien_left_limit = a_left_limit_node.translation().x;
-        self.alien_right_limit = a_right_limit_node.translation().x;
-        self.alien_up_limit = a_up_limit_node.translation().z;
-        self.alien_down_limit = a_down_limit_node.translation().z;
+        self.alien_env.init(owner);
 
         unsafe {
             self.frag = Some(
@@ -927,7 +1178,32 @@ impl Alien {
                     .claim()
                     .assume_unique(),
             );
+            self.change_dir_timer = Some(
+                owner
+                    .get_node_as::<Timer>("ChangeDirTimer")
+                    .unwrap()
+                    .claim()
+                    .assume_unique(),
+            );
+            self.fire_timer = Some(
+                owner
+                    .get_node_as::<Timer>("FireTimer")
+                    .unwrap()
+                    .claim()
+                    .assume_unique(),
+            );
+
+            self.player_root = Some(
+                owner
+                    .get_node_as::<Area>("/root/stage/PlayerRoot")
+                    .unwrap()
+                    .claim(),
+            );
         }
+
+        self.set_dir_change_span_random(1.0);
+        self.set_fire_span_random(1.0);
+        // godot_print!("_ready@Alien {}", env!("CARGO_PKG_VERSION"));
     }
 
     pub fn reset(&mut self, _owner: &Area) {
@@ -943,8 +1219,90 @@ impl Alien {
         }
     }
 
-    pub fn speed_up(&mut self, _owner: &Area, times: f32) {
+    pub fn speed_up(&mut self, times: f32) {
         self.speed *= times;
+    }
+
+    pub fn set_dir(&mut self, dir: Vector3) {
+        self.direction = dir.normalize();
+        if !self.direction.is_finite() {
+            self.direction = Vector3::new(0.0, 0.0, 1.0);
+        }
+    }
+
+    #[export]
+    fn change_dir_random(&mut self, _owner: &Area) {
+        // godot_print!("change_dir_random");
+        let rng = match self.rng.as_ref() {
+            Some(r) => r,
+            None => return,
+        };
+        let theta = rng.randf_range((-PI / 4.0) as _, (PI / 4.0) as _);
+        self.set_dir(rotate_xz_vec3(self.direction, theta as _));
+    }
+
+    pub fn set_dir_change_span_random(&mut self, ratio: f32) {
+        let span = if let Some(rng) = self.rng.as_ref() {
+            rng.randf_range(0.0, 3.0)
+        } else {
+            1.0
+        };
+        if let Some(t) = self.change_dir_timer.as_ref() {
+            t.set_wait_time(span * ratio as f64);
+            // godot_print!("reset change_dir_timer");
+        }
+    }
+
+    pub fn set_fire_span_random(&mut self, ratio: f32) {
+        // godot_print!("@@ set_fire_span_random");
+        let span = if let Some(rng) = self.rng.as_ref() {
+            rng.randf_range(
+                self.default_min_fire_interval as _,
+                self.default_max_fire_interval as _,
+            )
+        } else {
+            1.0
+        };
+        if let Some(t) = self.fire_timer.as_ref() {
+            // godot_print!("set to {}", span * ratio as f64);
+            t.set_wait_time(span * ratio as f64);
+            // godot_print!("reset fire_timer");
+        }
+    }
+
+    #[export]
+    fn timer_start(&self, _owner: &Area) {
+        if let Some(t) = self.change_dir_timer.as_ref() {
+            // godot_print!("change_dir_timer_start {}", t.wait_time());
+            t.start(0.0);
+            // godot_print!("start change_dir_timer");
+        }
+        if let Some(t) = self.fire_timer.as_ref() {
+            // godot_print!("fire_timer_start {}", t.wait_time());
+            t.start(0.0);
+            // godot_print!("start fire_timer");
+        }
+    }
+
+    #[export]
+    fn _on_alien_tree_entered(&self, owner: &Area) {
+        // godot_print!("_on_alien_tree_entered");
+        unsafe {
+            owner.call_deferred("timer_start", &[]);
+        }
+    }
+
+    #[export]
+    fn timer_stop(&self, _owner: &Area) {
+        // godot_print!("change_dir_timer_stop");
+        if let Some(t) = self.change_dir_timer.as_ref() {
+            t.stop();
+            // godot_print!("stop change_dir_timer");
+        }
+        if let Some(t) = self.fire_timer.as_ref() {
+            t.stop();
+            // godot_print!("stop fire_timer");
+        }
     }
 
     pub fn set_process(&mut self, process: fn(&mut Self, &Area, f64)) {
@@ -955,14 +1313,6 @@ impl Alien {
     #[export]
     fn _physics_process(&mut self, owner: &Area, delta: f64) {
         (self.process_pattern)(self, owner, delta);
-    }
-
-    fn gone_far_away(&self, owner: &Area) -> bool {
-        let pos = owner.translation();
-        pos.x < self.alien_left_limit
-            || pos.x > self.alien_right_limit
-            || pos.z < self.alien_up_limit
-            || pos.z > self.alien_down_limit
     }
 
     pub fn default_process_pattern(&mut self, owner: &Area, delta: f64) {
@@ -980,7 +1330,16 @@ impl Alien {
         let d = Vector3::new(0.0, 0.0, -self.speed * delta as f32);
         owner.translate(d);
 
-        if self.gone_far_away(owner) {
+        if self.alien_env.gone_far_away(owner) {
+            self.destruct(owner);
+        }
+    }
+
+    pub fn dir_pattern(&mut self, owner: &Area, delta: f64) {
+        let d = self.direction * self.speed * delta as f32;
+        owner.translate(d);
+
+        if self.alien_env.gone_far_away(owner) {
             self.destruct(owner);
         }
     }
@@ -1023,6 +1382,7 @@ impl Alien {
     #[export]
     fn destruct(&mut self, owner: &Area) {
         self.alive = false;
+        // self.change_dir_timer_stop(owner);
         unsafe {
             owner.call_deferred("return_to_base", &[]);
         }
@@ -1039,52 +1399,176 @@ impl Alien {
         owner.emit_signal("collect_alien", &[Variant::from_object(area)]);
         // godot_print!("end collect alien");
     }
-}
 
-/*
-impl BulletTarget for Alien {
-    fn shooted(&self, owner: &Node, _damage: u32) {
-        unsafe {
-            owner
-                .get_node_as::<AudioStreamPlayer>("../attackSound")
-                .unwrap()
-                .play(0.0);
+    #[export]
+    fn fire(&self, owner: &Area) {
+        if !self.alive {
+            return;
         }
 
-        unsafe {
-            owner.assume_unique().queue_free();
-        }
+        let rng = match self.rng.as_ref() {
+            Some(rng) => rng,
+            None => return,
+        };
 
-        /* // Copilot君が天才的なコード吐いた...多分healthは上に表示されるHPバー
-        unsafe {
-            owner.get_node_as::<Spatial>("../health").unwrap().set_scale(
-                Vector3::new(
-                    owner.get_node_as::<Spatial>("../health").unwrap().scale().x - damage as f32,
-                    1.0,
-                    1.0,
-                ),
-            );
-        }
+        // godot_print!("fire@Alien");
+        let pos = owner.translation();
+        let dir = if rng.randi_range(0, 1) == 0 {
+            // return its direction
+            -self.direction
+        } else {
+            let player_pos = unsafe {
+                self.player_root
+                    .as_ref()
+                    .unwrap()
+                    .assume_safe()
+                    .translation()
+            };
+            /*
+            let player_pos =
+                if player_pos.x.is_nan() || player_pos.y.is_nan() || player_pos.z.is_nan() {
+                    // godot_print!("player_pos is nan");
+                    Vector3::new(0.0, 0.0, 0.0)
+                } else {
+                    // godot_print!("player_pos {:?}", player_pos);
+                    player_pos
+                };
+            */
+            // return self to player
+            (player_pos - pos).normalize()
+        };
+        let speed = self.speed * 1.3;
+        let max_index = BARRAGE_PLANS.len() - 1;
+        let kind = rng.randi_range(0, max_index as i64);
 
-        if owner.get_node_as::<Spatial>("../health").unwrap().scale().x <= 0.0 {
-            unsafe {
-                owner.get_node_as::<AudioStreamPlayer>("../deathSound").unwrap().play(0.0);
-            }
-
-            unsafe {
-                owner.assume_unique().queue_free();
-            }
-        }
-        */
+        owner.emit_signal(
+            "alien_fire",
+            &[
+                Variant::from_vector3(&pos),
+                Variant::from_vector3(&dir),
+                Variant::from_f64(speed as f64),
+                Variant::from_i64(kind),
+            ],
+        );
     }
 }
-*/
+
+#[derive(NativeClass)]
+#[inherit(Area)]
+#[register_with(Self::register_signals)]
+struct AlienBullet {
+    #[property(default = 5.0)]
+    speed: f32,
+    direction: Vector3,
+    flying: bool,
+
+    alien_env: AlienEnv,
+}
+
+#[gdnative::methods]
+impl AlienBullet {
+    fn new(_owner: &Area) -> Self {
+        Self {
+            speed: 5.0,
+            direction: Vector3::new(0.0, 0.0, 1.0),
+            flying: false,
+
+            alien_env: AlienEnv::new(),
+        }
+    }
+
+    fn register_signals(builder: &ClassBuilder<Self>) {
+        // godot_print!("register_signals@AlienBullet");
+
+        builder.add_signal(Signal {
+            name: "collect_alien_bullet",
+            args: &[SignalArgument {
+                name: "bullet",
+                default: Variant::new(),
+                export_info: ExportInfo::new(VariantType::Object),
+                usage: PropertyUsage::DEFAULT,
+            }],
+        });
+
+        // godot_print!("end register_signals@AlienBullet");
+    }
+
+    #[export]
+    fn _ready(&mut self, owner: &Area) {
+        let stage = unsafe { owner.get_node("/root/stage/").unwrap().assume_safe() };
+        owner
+            .connect(
+                "collect_alien_bullet",
+                stage,
+                "collect_alien_bullet",
+                VariantArray::new_shared(),
+                0,
+            )
+            .unwrap();
+
+        self.alien_env.init(owner);
+
+        // godot_print!("ready@AlienBullet");
+    }
+
+    pub fn set_speed(&mut self, speed: f32) {
+        self.speed = speed;
+    }
+
+    pub fn set_dir(&mut self, dir: Vector3) {
+        self.direction = dir.normalize();
+        if !self.direction.is_finite() {
+            self.direction = Vector3::new(0.0, 0.0, 1.0);
+        }
+    }
+
+    #[export]
+    fn _physics_process(&mut self, owner: &Area, delta: f64) {
+        let d = self.direction * self.speed * delta as f32;
+        owner.translate(d);
+
+        if self.alien_env.gone_far_away(owner) {
+            self.destruct(owner);
+        }
+    }
+
+    #[export]
+    fn hit(&mut self, owner: &Area, _: Variant) {
+        self.destruct(owner);
+    }
+
+    fn destruct(&mut self, owner: &Area) {
+        if !self.flying {
+            return;
+        }
+        unsafe {
+            owner.call_deferred("cartridge_fallen", &[]);
+        }
+        self.flying = false;
+    }
+
+    #[export]
+    fn cartridge_fallen(&self, owner: &Area) {
+        unsafe {
+            let parent = owner.get_parent().unwrap().assume_safe();
+            parent.remove_child(owner.assume_shared());
+        }
+        let area = unsafe { owner.assume_unique() };
+        owner.emit_signal("collect_alien_bullet", &[Variant::from_object(area)]);
+    }
+}
 
 fn init(handle: InitHandle) {
+    // godot_print!("beep1");
     handle.add_class::<Stage>();
+    // godot_print!("beep2");
     handle.add_class::<Player>();
+    // godot_print!("beep3");
     handle.add_class::<Bullet>();
+    // godot_print!("beep4");
     handle.add_class::<Alien>();
+    // godot_print!("beep5");
+    handle.add_class::<AlienBullet>();
 }
 
 godot_init!(init);

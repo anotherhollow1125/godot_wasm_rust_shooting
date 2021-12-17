@@ -65,6 +65,7 @@ shape = SubResource( 4 )
 
 [node name="laser" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 6 )
+volume_db = -20.0
 
 [node name="frag" parent="." instance=ExtResource( 7 )]
 mesh = SubResource( 6 )

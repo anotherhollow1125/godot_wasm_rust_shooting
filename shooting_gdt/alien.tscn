@@ -13,6 +13,8 @@ transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0
 collision_layer = 2
 collision_mask = 5
 script = ExtResource( 2 )
+default_max_fire_interval = 3.0
+default_min_fire_interval = 1.0
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.636573, 0 )
@@ -28,5 +30,13 @@ one_shot = true
 [node name="attackSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 4 )
 
+[node name="ChangeDirTimer" type="Timer" parent="."]
+
+[node name="FireTimer" type="Timer" parent="."]
+
 [connection signal="area_entered" from="." to="." method="shooted"]
+[connection signal="tree_entered" from="." to="." method="_on_alien_tree_entered"]
+[connection signal="tree_exiting" from="." to="." method="timer_stop"]
 [connection signal="timeout" from="DestructTimer" to="." method="destruct"]
+[connection signal="timeout" from="ChangeDirTimer" to="." method="change_dir_random"]
+[connection signal="timeout" from="FireTimer" to="." method="fire"]

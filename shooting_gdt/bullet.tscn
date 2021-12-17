@@ -11,7 +11,7 @@ height = 0.0793837
 [sub_resource type="SpatialMaterial" id=3]
 albedo_color = Color( 0, 0, 0, 1 )
 emission_enabled = true
-emission = Color( 0, 1, 1, 1 )
+emission = Color( 0.196078, 1, 0, 1 )
 emission_energy = 1.0
 emission_operator = 0
 emission_on_uv2 = false
