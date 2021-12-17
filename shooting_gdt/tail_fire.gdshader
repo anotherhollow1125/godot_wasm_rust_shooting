@@ -16,5 +16,7 @@ void fragment() {
 	// EMISSION = VERTEX;
 	// ALPHA = VERTEX.z;
 	// ALPHA = smoothstep(0.0, 1.0, 0.5 - nom.z) * float(int(TIME * 1000.0) % 2);
-	ALPHA = smoothstep(0.0, 1.0, 0.5 - nom.z) * sin(mod(TIME * 100.0, PI2));
+	// ALPHA = smoothstep(0.0, 1.0, 0.5 - nom.z) * sin(mod(TIME * 100.0, PI2));
+	float speed = 0.1;
+	ALPHA = smoothstep(0.0, 1.0, 0.5 - nom.z) * sin(mod(TIME, speed) / speed * PI2);
 }

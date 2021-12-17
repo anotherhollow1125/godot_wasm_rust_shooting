@@ -14,6 +14,10 @@ config/name="Shooting"
 run/main_scene="res://stage.tscn"
 config/icon="res://icon.png"
 
+[display]
+
+window/size/height=800
+
 [global]
 
 layer=false
@@ -32,6 +36,7 @@ shoot={
 3d_physics/layer_1="Player"
 3d_physics/layer_2="Aliean"
 3d_physics/layer_3="Bullet"
+3d_physics/layer_4="AlienBullet"
 
 [physics]
 
