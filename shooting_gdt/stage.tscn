@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://PlayerFighter.tscn" type="PackedScene" id=1]
 [ext_resource path="res://star_bg.gdshader" type="Shader" id=2]
@@ -6,6 +6,9 @@
 [ext_resource path="res://AlienBullet.tscn" type="PackedScene" id=4]
 [ext_resource path="res://stage.gdns" type="Script" id=5]
 [ext_resource path="res://MeshInstance.gd" type="Script" id=6]
+[ext_resource path="res://gdt_assets/powerup10.mp3" type="AudioStream" id=7]
+[ext_resource path="res://gdt_assets/bgm_loop.mp3" type="AudioStream" id=8]
+[ext_resource path="res://HUD.tscn" type="PackedScene" id=9]
 
 [sub_resource type="PlaneMesh" id=1]
 
@@ -28,11 +31,11 @@ background_sky = SubResource( 5 )
 
 [node name="stage" type="Node"]
 script = ExtResource( 5 )
-alibullet_scene = ExtResource( 4 )
 alien_scene = ExtResource( 3 )
+alibullet_scene = ExtResource( 4 )
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.381507, 0.924366, 0, -0.924366, 0.381507, 0, 15, -1.217 )
+transform = Transform( 1, 0, 0, 0, 0.270568, 0.962701, 0, -0.962701, 0.270568, 0, 20.7252, 3.18139 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.474565, 0.880221, 0, -0.880221, 0.474565, 0, 5.5094, 0 )
@@ -45,7 +48,7 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 10, -10, 0, 0 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 10, 10, 0, 0 )
 
 [node name="up_limit" type="StaticBody" parent="."]
-transform = Transform( 10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16 )
+transform = Transform( 10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -20 )
 
 [node name="down_limit" type="StaticBody" parent="."]
 transform = Transform( 10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1 )
@@ -53,14 +56,8 @@ transform = Transform( 10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1 )
 [node name="PlayerRoot" parent="." instance=ExtResource( 1 )]
 speed = 10.0
 
-[node name="alien" parent="." instance=ExtResource( 3 )]
-transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -6.52388, -0.60868, -3.87827 )
-
-[node name="alien2" parent="." instance=ExtResource( 3 )]
-transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 2.09115, -0.546124, -10.9303 )
-
 [node name="Background" type="MeshInstance" parent="."]
-transform = Transform( 51, 0, 0, 0, 1, 0, 0, 0, 51, 0, -10, 0 )
+transform = Transform( 51, 0, 0, 0, 1, 0, 0, 0, 51, -0.712242, -9.82933, -0.166999 )
 mesh = SubResource( 1 )
 material/0 = SubResource( 2 )
 script = ExtResource( 6 )
@@ -104,7 +101,19 @@ material/0 = null
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource( 6 )
 
+[node name="extend" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 7 )
+
+[node name="BGM" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 8 )
+
+[node name="HUD" parent="." instance=ExtResource( 9 )]
+
+[connection signal="game_over" from="." to="HUD" method="_on_stage_game_over"]
+[connection signal="set_remain" from="." to="HUD" method="_on_stage_set_remain"]
+[connection signal="set_score" from="." to="HUD" method="_on_stage_set_score"]
 [connection signal="speed_up" from="." to="Background" method="_on_stage_speed_up"]
 [connection signal="speed_up" from="." to="Background2" method="_on_stage_speed_up"]
 [connection signal="speed_up" from="." to="Background3" method="_on_stage_speed_up"]
 [connection signal="timeout" from="alien_spawn_timer" to="." method="spawn_alien"]
+[connection signal="game_start" from="HUD" to="." method="start_game"]

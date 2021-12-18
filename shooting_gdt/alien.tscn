@@ -9,18 +9,18 @@
 extents = Vector3( 0.752819, 2.0752, 0.883696 )
 
 [node name="alien" type="Area"]
-transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0 )
 collision_layer = 2
 collision_mask = 5
 script = ExtResource( 2 )
-default_max_fire_interval = 3.0
-default_min_fire_interval = 1.0
+default_max_fire_interval = 4.0
+default_min_fire_interval = 2.0
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.636573, 0 )
 shape = SubResource( 1 )
 
 [node name="alien1" parent="." instance=ExtResource( 1 )]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0 )
 
 [node name="frag" parent="." instance=ExtResource( 3 )]
 

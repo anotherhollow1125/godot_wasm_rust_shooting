@@ -1,0 +1,293 @@
+[gd_scene load_steps=30 format=2]
+
+[ext_resource path="res://gdt_assets/left_arrow.png" type="Texture" id=1]
+[ext_resource path="res://gdt_assets/up_arrow.png" type="Texture" id=2]
+[ext_resource path="res://gdt_assets/right_arrow.png" type="Texture" id=3]
+[ext_resource path="res://gdt_assets/down_arrow.png" type="Texture" id=4]
+[ext_resource path="res://gdt_assets/right_arrow_pushed.png" type="Texture" id=5]
+[ext_resource path="res://gdt_assets/left_arrow_pushed.png" type="Texture" id=6]
+[ext_resource path="res://gdt_assets/down_arrow_pushed.png" type="Texture" id=7]
+[ext_resource path="res://gdt_assets/up_arrow_pushed.png" type="Texture" id=8]
+[ext_resource path="res://DownButton.gd" type="Script" id=9]
+[ext_resource path="res://RightButton.gd" type="Script" id=10]
+[ext_resource path="res://LeftButton.gd" type="Script" id=11]
+[ext_resource path="res://ShotButton.gd" type="Script" id=12]
+[ext_resource path="res://gdt_assets/shot_button.png" type="Texture" id=13]
+[ext_resource path="res://gdt_assets/RussoOne-Regular.ttf" type="DynamicFontData" id=14]
+[ext_resource path="res://UpButton.gd" type="Script" id=15]
+[ext_resource path="res://gdt_assets/shot_button_pressed.png" type="Texture" id=16]
+[ext_resource path="res://gdt_assets/player_icon.png" type="Texture" id=17]
+[ext_resource path="res://HUD.gd" type="Script" id=18]
+[ext_resource path="res://GameStartLabel.gd" type="Script" id=19]
+
+[sub_resource type="StyleBoxFlat" id=1]
+bg_color = Color( 0.129412, 0.133333, 0.25098, 1 )
+
+[sub_resource type="DynamicFont" id=2]
+size = 460
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=3]
+size = 30
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=4]
+size = 30
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=5]
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=6]
+size = 64
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=7]
+size = 32
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=8]
+size = 64
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=9]
+size = 50
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=10]
+size = 32
+font_data = ExtResource( 14 )
+
+[node name="HUD" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 1.49835
+margin_top = -1.49832
+margin_right = 1.49835
+margin_bottom = -1.49829
+script = ExtResource( 18 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Panel" type="Panel" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_top = -271.0
+margin_right = 600.0
+margin_bottom = -1.0
+custom_styles/panel = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="UpButton" type="TouchScreenButton" parent="Panel"]
+position = Vector2( 120, 30 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 2 )
+pressed = ExtResource( 8 )
+action = "ui_up"
+script = ExtResource( 15 )
+
+[node name="DownButton" type="TouchScreenButton" parent="Panel"]
+position = Vector2( 120, 160 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 4 )
+pressed = ExtResource( 7 )
+action = "ui_down"
+script = ExtResource( 9 )
+
+[node name="RightButton" type="TouchScreenButton" parent="Panel"]
+position = Vector2( 200, 100 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 3 )
+pressed = ExtResource( 5 )
+action = "ui_right"
+script = ExtResource( 10 )
+
+[node name="LeftButton" type="TouchScreenButton" parent="Panel"]
+position = Vector2( 40, 100 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 1 )
+pressed = ExtResource( 6 )
+action = "ui_left"
+script = ExtResource( 11 )
+
+[node name="ShotButton" type="TouchScreenButton" parent="Panel"]
+position = Vector2( 330, 142 )
+scale = Vector2( 0.136073, 0.103024 )
+normal = ExtResource( 13 )
+pressed = ExtResource( 16 )
+action = "shoot"
+script = ExtResource( 12 )
+
+[node name="ShotLabel" type="Label" parent="Panel/ShotButton"]
+margin_left = 60.4744
+margin_top = 57.9023
+margin_right = 1710.47
+margin_bottom = 963.902
+custom_fonts/font = SubResource( 2 )
+text = "SPACE"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ScoreLabel" type="Label" parent="Panel"]
+anchor_right = 0.025
+anchor_bottom = 0.0222222
+margin_left = 326.779
+margin_top = 21.6505
+margin_right = 429.779
+margin_bottom = 52.6505
+rect_pivot_offset = Vector2( 88.3549, 18.5 )
+custom_fonts/font = SubResource( 3 )
+text = "SCORE :"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CrossLabel" type="Label" parent="Panel"]
+anchor_right = 0.025
+anchor_bottom = 0.0222222
+margin_left = 429.145
+margin_top = 76.7094
+margin_right = 435.145
+margin_bottom = 107.709
+rect_pivot_offset = Vector2( 88.3549, 18.5 )
+custom_fonts/font = SubResource( 3 )
+text = "x"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureRect" parent="Panel"]
+margin_left = 366.891
+margin_top = 64.4639
+margin_right = 1326.89
+margin_bottom = 1024.46
+rect_scale = Vector2( 0.05, 0.05 )
+texture = ExtResource( 17 )
+stretch_mode = 5
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SocreValLabel" type="Label" parent="Panel"]
+margin_left = 460.67
+margin_top = 22.9977
+margin_right = 563.67
+margin_bottom = 59.9977
+rect_pivot_offset = Vector2( 37.2794, 35.6528 )
+custom_fonts/font = SubResource( 4 )
+text = "0"
+align = 2
+valign = 1
+
+[node name="RemainLabel" type="Label" parent="Panel"]
+margin_left = 462.005
+margin_top = 77.0587
+margin_right = 565.005
+margin_bottom = 114.059
+rect_pivot_offset = Vector2( 37.2794, 35.6528 )
+custom_fonts/font = SubResource( 4 )
+text = "0"
+align = 2
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CopyRight" type="Label" parent="Panel"]
+anchor_right = 0.025
+anchor_bottom = 0.0222222
+margin_left = 3.0
+margin_top = 247.0
+margin_right = 122.0
+margin_bottom = 261.0
+rect_pivot_offset = Vector2( 88.3549, 18.5 )
+custom_fonts/font = SubResource( 5 )
+text = "© namnium 2021"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TitleGroup" type="Control" parent="."]
+margin_top = 120.0
+margin_right = 600.0
+margin_bottom = 420.0
+
+[node name="Title" type="Label" parent="TitleGroup"]
+margin_left = 143.0
+margin_top = 80.0
+margin_right = 457.0
+margin_bottom = 158.0
+custom_fonts/font = SubResource( 6 )
+text = "Alien War"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="GameStartLabel" type="Label" parent="TitleGroup"]
+margin_left = 144.0
+margin_top = 200.0
+margin_right = 456.0
+margin_bottom = 239.0
+custom_fonts/font = SubResource( 7 )
+text = "Shot to Game Start"
+script = ExtResource( 19 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="BlinkTimer" type="Timer" parent="TitleGroup"]
+wait_time = 0.5
+autostart = true
+
+[node name="GameOverGroup" type="Control" parent="."]
+margin_top = 120.0
+margin_right = 600.0
+margin_bottom = 420.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="GameOverLable" type="Label" parent="GameOverGroup"]
+margin_left = 125.0
+margin_top = 33.941
+margin_right = 475.0
+margin_bottom = 111.941
+custom_fonts/font = SubResource( 8 )
+text = "Game Over"
+
+[node name="ScoreLabel" type="Label" parent="GameOverGroup"]
+margin_top = 140.0
+margin_right = 600.0
+margin_bottom = 201.0
+rect_pivot_offset = Vector2( 98.5, 18 )
+custom_fonts/font = SubResource( 9 )
+text = "SCORE :"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ResetButton" type="Button" parent="GameOverGroup"]
+margin_left = 210.0
+margin_top = 250.0
+margin_right = 390.0
+margin_bottom = 320.0
+custom_fonts/font = SubResource( 10 )
+text = "RESET"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[connection signal="timeout" from="TitleGroup/BlinkTimer" to="TitleGroup/GameStartLabel" method="_on_BlinkTimer_timeout"]
+[connection signal="pressed" from="GameOverGroup/ResetButton" to="." method="_on_ResetButton_pressed"]

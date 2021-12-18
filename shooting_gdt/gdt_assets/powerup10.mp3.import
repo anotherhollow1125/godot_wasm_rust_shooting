@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/powerup10.mp3-26f32db0c773ab01c6dea6a57bab9411.mp3str"
+
+[deps]
+
+source_file="res://gdt_assets/powerup10.mp3"
+dest_files=[ "res://.import/powerup10.mp3-26f32db0c773ab01c6dea6a57bab9411.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0
