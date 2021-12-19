@@ -300,7 +300,7 @@ impl Stage {
 
     #[export]
     fn start_game(&mut self, owner: &Node) {
-        godot_print!("game start");
+        godot_print!("game start"); // info log
         self.set_player_life(owner, self.default_player_life);
         self.set_beated_alien_num(owner, 0);
         self.set_heat(owner, 1.0);
@@ -321,7 +321,7 @@ impl Stage {
     }
 
     fn end_game(&mut self, owner: &Node) {
-        godot_print!("game end");
+        godot_print!("game end"); // info log
         match self.alien_spawn_timer.as_ref() {
             Some(timer) => timer.stop(),
             None => return,
@@ -468,7 +468,7 @@ impl Stage {
         // self.player_life -= 1;
         self.set_player_life(owner, self.player_life - 1);
         if self.player_life > 0 {
-            godot_print!("Player Restart");
+            godot_print!("Player Restart"); // info log
             unsafe {
                 owner.call_deferred("player_restart", &[]);
             }
@@ -490,7 +490,7 @@ impl Stage {
             // self.stage_heat *= 1.1;
             // owner.emit_signal("speed_up", &[Variant::from_f64(self.stage_heat as f64)]);
             self.set_heat(owner, self.stage_heat * 1.1);
-            godot_print!("Stage Heat: {}", self.stage_heat);
+            godot_print!("Stage Heat: {}", self.stage_heat); // info log
         }
         if self.beated_alien_num % 20 == 0 {
             // self.player_life += 1;
@@ -498,9 +498,9 @@ impl Stage {
             if let Some(sound) = self.extend_sound.as_ref() {
                 sound.play(0.0);
             }
-            godot_print!("Player Life Extended: {}", self.player_life);
+            godot_print!("Player Life Extended: {}", self.player_life); // info log
         }
-        godot_print!("beated_alien_num: {}", self.beated_alien_num);
+        // godot_print!("beated_alien_num: {}", self.beated_alien_num);
     }
 
     #[export]
@@ -761,7 +761,7 @@ impl Player {
             )
             .unwrap();
 
-        godot_print!("_ready@Player {}", env!("CARGO_PKG_VERSION"));
+        godot_print!("_ready@Player {}", env!("CARGO_PKG_VERSION")); // info log
     }
 
     #[export]
@@ -930,7 +930,7 @@ impl Player {
             return;
         }
 
-        godot_print!("crash@Player");
+        // godot_print!("crash@Player");
 
         self.speed = 0.0;
         self.alive = false;

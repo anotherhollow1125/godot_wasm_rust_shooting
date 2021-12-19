@@ -108,6 +108,10 @@ stream = ExtResource( 7 )
 stream = ExtResource( 8 )
 
 [node name="HUD" parent="." instance=ExtResource( 9 )]
+margin_left = 0.0
+margin_top = 0.0
+margin_right = 0.0
+margin_bottom = 0.0
 
 [connection signal="game_over" from="." to="HUD" method="_on_stage_game_over"]
 [connection signal="set_remain" from="." to="HUD" method="_on_stage_set_remain"]
