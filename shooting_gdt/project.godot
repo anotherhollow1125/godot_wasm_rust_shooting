@@ -61,6 +61,10 @@ shoot={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":0,"pressure":0.0,"pressed":false,"script":null)
  ]
 }
+touch_stick={
+"deadzone": 0.5,
+"events": [  ]
+}
 
 [input_devices]
 

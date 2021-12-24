@@ -31,8 +31,8 @@ background_sky = SubResource( 5 )
 
 [node name="stage" type="Node"]
 script = ExtResource( 5 )
-alien_scene = ExtResource( 3 )
 alibullet_scene = ExtResource( 4 )
+alien_scene = ExtResource( 3 )
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.270568, 0.962701, 0, -0.962701, 0.270568, 0, 20.7252, 3.18139 )
