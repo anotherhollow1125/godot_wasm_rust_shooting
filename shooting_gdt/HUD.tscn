@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=2]
+[gd_scene load_steps=39 format=2]
 
 [ext_resource path="res://gdt_assets/left_arrow.png" type="Texture" id=1]
 [ext_resource path="res://gdt_assets/up_arrow.png" type="Texture" id=2]
@@ -24,6 +24,10 @@
 [ext_resource path="res://gdt_assets/stick_ball.png" type="Texture" id=22]
 [ext_resource path="res://button.gd" type="Script" id=23]
 [ext_resource path="res://gdt_assets/transparent_box.png" type="Texture" id=24]
+[ext_resource path="res://toStick.gd" type="Script" id=25]
+[ext_resource path="res://gdt_assets/stick_icon.png" type="Texture" id=26]
+[ext_resource path="res://gdt_assets/buttonicon.png" type="Texture" id=27]
+[ext_resource path="res://toButton.gd" type="Script" id=28]
 
 [sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0.129412, 0.133333, 0.25098, 1 )
@@ -86,42 +90,6 @@ custom_styles/panel = SubResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
-
-[node name="UpButton" type="TouchScreenButton" parent="Panel"]
-visible = false
-position = Vector2( 120, 30 )
-scale = Vector2( 0.08, 0.08 )
-normal = ExtResource( 2 )
-pressed = ExtResource( 8 )
-action = "ui_up"
-script = ExtResource( 15 )
-
-[node name="DownButton" type="TouchScreenButton" parent="Panel"]
-visible = false
-position = Vector2( 120, 160 )
-scale = Vector2( 0.08, 0.08 )
-normal = ExtResource( 4 )
-pressed = ExtResource( 7 )
-action = "ui_down"
-script = ExtResource( 9 )
-
-[node name="RightButton" type="TouchScreenButton" parent="Panel"]
-visible = false
-position = Vector2( 200, 100 )
-scale = Vector2( 0.08, 0.08 )
-normal = ExtResource( 3 )
-pressed = ExtResource( 5 )
-action = "ui_right"
-script = ExtResource( 10 )
-
-[node name="LeftButton" type="TouchScreenButton" parent="Panel"]
-visible = false
-position = Vector2( 40, 100 )
-scale = Vector2( 0.08, 0.08 )
-normal = ExtResource( 1 )
-pressed = ExtResource( 6 )
-action = "ui_left"
-script = ExtResource( 11 )
 
 [node name="ShotButton" type="TouchScreenButton" parent="Panel"]
 position = Vector2( 330, 142 )
@@ -225,33 +193,83 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="button" type="TouchScreenButton" parent="Panel"]
+[node name="stick_button" type="TouchScreenButton" parent="Panel"]
 position = Vector2( 30, 0 )
 scale = Vector2( 0.27, 0.27 )
 normal = ExtResource( 24 )
 script = ExtResource( 23 )
 
-[node name="Stick" type="Sprite" parent="Panel/button"]
+[node name="Stick" type="Sprite" parent="Panel/stick_button"]
 position = Vector2( 500, 500 )
 texture = ExtResource( 24 )
 script = ExtResource( 20 )
 
-[node name="ball" type="Sprite" parent="Panel/button/Stick"]
+[node name="ball" type="Sprite" parent="Panel/stick_button/Stick"]
 scale = Vector2( 0.25, 0.25 )
 texture = ExtResource( 22 )
 
-[node name="threshold" type="Sprite" parent="Panel/button/Stick"]
+[node name="threshold" type="Sprite" parent="Panel/stick_button/Stick"]
 scale = Vector2( 0.4, 0.4 )
 texture = ExtResource( 21 )
 
-[node name="ring" type="Sprite" parent="Panel/button/Stick"]
+[node name="ring" type="Sprite" parent="Panel/stick_button/Stick"]
 scale = Vector2( 0.7, 0.7 )
 texture = ExtResource( 21 )
+
+[node name="toButton" type="TouchScreenButton" parent="Panel/stick_button"]
+position = Vector2( -11.6505, 94.8732 )
+scale = Vector2( 0.2, 0.2 )
+normal = ExtResource( 27 )
+script = ExtResource( 28 )
+
+[node name="cross_button" type="Node2D" parent="Panel"]
+visible = false
+
+[node name="UpButton" type="TouchScreenButton" parent="Panel/cross_button"]
+position = Vector2( 150, 25 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 2 )
+pressed = ExtResource( 8 )
+action = "ui_up"
+script = ExtResource( 15 )
+
+[node name="DownButton" type="TouchScreenButton" parent="Panel/cross_button"]
+position = Vector2( 150, 150 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 4 )
+pressed = ExtResource( 7 )
+action = "ui_down"
+script = ExtResource( 9 )
+
+[node name="RightButton" type="TouchScreenButton" parent="Panel/cross_button"]
+position = Vector2( 220, 90 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 3 )
+pressed = ExtResource( 5 )
+action = "ui_right"
+script = ExtResource( 10 )
+
+[node name="LeftButton" type="TouchScreenButton" parent="Panel/cross_button"]
+position = Vector2( 80, 90 )
+scale = Vector2( 0.08, 0.08 )
+normal = ExtResource( 1 )
+pressed = ExtResource( 6 )
+action = "ui_left"
+script = ExtResource( 11 )
+
+[node name="toStick" type="TouchScreenButton" parent="Panel/cross_button"]
+position = Vector2( 48.4824, 31.3477 )
+scale = Vector2( 0.025, 0.025 )
+normal = ExtResource( 26 )
+script = ExtResource( 25 )
 
 [node name="TitleGroup" type="Control" parent="."]
 margin_top = 120.0
 margin_right = 600.0
 margin_bottom = 420.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Title" type="Label" parent="TitleGroup"]
 margin_left = 143.0
@@ -322,7 +340,9 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[connection signal="pressed" from="Panel/button" to="Panel/button" method="_on_button_pressed"]
-[connection signal="released" from="Panel/button" to="Panel/button" method="_on_button_released"]
+[connection signal="pressed" from="Panel/stick_button" to="Panel/stick_button" method="_on_button_pressed"]
+[connection signal="released" from="Panel/stick_button" to="Panel/stick_button" method="_on_button_released"]
+[connection signal="pressed" from="Panel/stick_button/toButton" to="Panel/stick_button/toButton" method="_on_toButton_pressed"]
+[connection signal="pressed" from="Panel/cross_button/toStick" to="Panel/cross_button/toStick" method="_on_toStick_pressed"]
 [connection signal="timeout" from="TitleGroup/BlinkTimer" to="TitleGroup/GameStartLabel" method="_on_BlinkTimer_timeout"]
 [connection signal="pressed" from="GameOverGroup/ResetButton" to="." method="_on_ResetButton_pressed"]

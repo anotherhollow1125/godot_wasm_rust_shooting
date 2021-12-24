@@ -10,7 +10,7 @@ func _input(event):
 	
 	var p = to_local(event.position);
 	if !get_rect().has_point(p):
-		$"../".stick_vec = Vector2(0.0, 0.0);
+		# $"../".stick_vec = Vector2(0.0, 0.0);
 		return
 
 	var threshold = abs(p.x) > 50 or abs(p.y) > 50;
