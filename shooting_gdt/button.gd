@@ -12,22 +12,24 @@ func _ready():
 #func _process(delta):
 #	pass
 
+var sens = 0.2
+
 func _process(delta):
 	if touched:
-		if stick_vec.x > 0:
+		if stick_vec.x > sens:
 			Input.action_release("ui_left");
 			Input.action_press("ui_right");
-		elif stick_vec.x < 0:
+		elif stick_vec.x < -sens:
 			Input.action_release("ui_right");
 			Input.action_press("ui_left");
 		else:
 			Input.action_release("ui_left");
 			Input.action_release("ui_right");
 
-		if stick_vec.y > 0:
+		if stick_vec.y > sens:
 			Input.action_release("ui_up");
 			Input.action_press("ui_down");
-		elif stick_vec.y < 0:
+		elif stick_vec.y < -sens:
 			Input.action_release("ui_down");
 			Input.action_press("ui_up");
 		else:
